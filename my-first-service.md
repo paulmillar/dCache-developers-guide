@@ -31,7 +31,7 @@ In batch script language, the `say` command logs some information, with the argu
 We also need to update system-test so that it runs our new service.  The source for the layout file for system-test is `packages/system-test/src/main/skel/etc/layouts/system-test.conf`.  Add the line `[dCacheDomain/simple]` immediately before some other `[dCacheDomain/<service>]` line; for example,
 
 ```
-... some configuration here ...
+...
 
 [dCacheDomain]
 # The following is defined for the domain to prevent that the CLI
@@ -43,6 +43,7 @@ dcache.java.options.extra=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address
 admin.paths.history=${system-test.home}/var/admin/history
 
 [dCacheDomain/zookeeper]
+...
 ```
 
 In this example, the `[dCacheDomain/simple]` line is the first service defined in the `dCacheDomain` domain, immediately before the `admin` service.
@@ -151,7 +152,7 @@ Listening for transport dt_socket at address: 2299
 INFO  - system-test.conf:1: Property system-test.home is not a standard property
 INFO  - system-test.conf:160: Property frontend.net.internal is not a standard property
 24 Jul 2017 14:08:33 (System) [] ZooKeeper connection to localhost/127.0.0.1:2181 failed (Connection refused), attempting reconnect.
-24 Jul 2017 14:08:33 (System) [] Hello, world! 
+24 Jul 2017 14:08:33 (System) [] Hello, world!
 ```
 
 The difference is that we can now change this greeting without changing the batch file.
@@ -180,7 +181,7 @@ To see the effect of our new configuration, we simply restart dCache  with the `
 paul@celebrimbor:~/git/dCache (tutorial/step-2)$ packages/system-test/target/dcache/bin/dcache restart
 Stopping dCacheDomain 0 1 2 3 4 5 6 7 8 9 10 done
 Starting dCacheDomain done
-paul@celebrimbor:~/git/dCache (tutorial/step-2)$ 
+paul@celebrimbor:~/git/dCache (tutorial/step-2)$
 ```
 
 You will see the new greeting in the domain log file: `packages/system-test/target/dcache/var/log/dCacheDomain.log`
@@ -191,7 +192,7 @@ Listening for transport dt_socket at address: 2299
 INFO  - system-test.conf:1: Property system-test.home is not a standard property
 INFO  - system-test.conf:161: Property frontend.net.internal is not a standard property
 24 Jul 2017 14:19:28 (System) [] ZooKeeper connection to localhost/127.0.0.1:2181 failed (Connection refused), attempting reconnect.
-24 Jul 2017 14:19:28 (System) [] Aloha Honua! 
+24 Jul 2017 14:19:28 (System) [] Aloha Honua!
 ```
 
 The new greeting won't be at the top of the file because \(by default\) dCache does not start a new file with each domain restart.
