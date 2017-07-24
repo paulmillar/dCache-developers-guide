@@ -17,7 +17,7 @@ remote: Total 362938 (delta 59), reused 107 (delta 20), pack-reused 362759
 Receiving objects: 100% (362938/362938), 353.80 MiB | 25.21 MiB/s, done.
 Resolving deltas: 100% (198554/198554), done.
 Checking connectivity... done.
-paul@celebrimbor:~/git$ 
+paul@celebrimbor:~/git$
 ```
 
 To compile the code you will need a Java compiler and Maven.  Later chapters will go into the structure and layout of dCache code, but for now we just point out the major areas:
@@ -33,7 +33,7 @@ drwxr-xr-x  3 paul paul  4096 Jul 20 16:31 plugins
 -rw-r--r--  1 paul paul 54609 Jul 20 16:31 pom.xml
 -rw-r--r--  1 paul paul  3716 Jul 20 16:31 README.md
 drwxr-xr-x 10 paul paul  4096 Jul 20 16:31 skel
-paul@celebrimbor:~/git$ 
+paul@celebrimbor:~/git$
 ```
 
 There are five directories:
@@ -91,21 +91,44 @@ paul@celebrimbor:~/git/dCache (master)$ mvn -am -pl packages/system-test clean p
 [INFO] Finished at: 2017-07-20T17:43:27+02:00
 [INFO] Final Memory: 186M/1600M
 [INFO] ------------------------------------------------------------------------
-paul@celebrimbor:~/git/dCache (master)$ 
+paul@celebrimbor:~/git/dCache (master)$
 ```
 
 Congratulations: you should now have a work dCache instance!
 
 Almost all the files associated with this instance are located in `packages/system-test/target/dcache`. You can verify that dCache is running by using the `dcache` script.  This script also lets you start and stop dCache, show some information about dCache instance and  perform some basic admin operations.
 
-Here are some examples of stopping and starting dCache, and querying dCache's current status:
+Without going into details, a domain is a Java Virtual Machine \(JVM\) instance.  A node within a dCache cluster can run multiple domains \(i.e., multiple JVM instances\) that are configured in a common configuration system.  The `dcache` script can start and stop the domains independently.
+
+With the status command, the dcache script shows the current status of all configured domains.  For system-test, there is only one domain \(`dCacheDomain`\), so only a single line of information is shown:
 
 ```
 paul@celebrimbor:~/git/dCache (master)$ packages/system-test/target/dcache/bin/dcache status
 DOMAIN       STATUS                  PID  USER LOG                                                                               
 dCacheDomain running (for 5 minutes) 4855 paul /home/paul/git/dCache/packages/system-test/target/dcache/var/log/dCacheDomain.log 
+paul@celebrimbor:~/git/dCache (master)$ 
+```
+
+The output from `dcache status` mentions the location of the log file for this domain.  This file contains the redirected standard out \(stdout\) and standard error \(stderr\) from the java process and is the main place to look for diagnostic information.
+
+As a simple exercise, we can stop and start dCache.
+
+Use the `dcache stop` command to stop all dCache domains and `dcache status` to verify that they are stopped:
+
+```
 paul@celebrimbor:~/git/dCache (master)$ packages/system-test/target/dcache/bin/dcache stop
 Stopping dCacheDomain 0 1 2 3 4 5 6 7 8 9 10 11 done
+paul@celebrimbor:~/git/dCache (master)$ packages/system-test/target/dcache/bin/dcache status
+DOMAIN       STATUS  PID USER                          LOG                                                                               
+dCacheDomain stopped     [whoever runs "dcache start"] /home/paul/git/dCache/packages/system-test/target/dcache/var/log/dCacheDomain.log 
+paul@celebrimbor:~/git/dCache (master)$
+```
+
+The counting \(`0 1 2 3` ...\) comes from the `dcache` script waiting for `dCacheDomain` to shut down in an orderly fashion.  If the domain takes too long then the script will kill the process with more force.
+
+We can now start dCache again, using the `dcache start` command, and verifying that dCache is running:
+
+```
 paul@celebrimbor:~/git/dCache (master)$ packages/system-test/target/dcache/bin/dcache status
 DOMAIN       STATUS  PID USER                          LOG                                                                               
 dCacheDomain stopped     [whoever runs "dcache start"] /home/paul/git/dCache/packages/system-test/target/dcache/var/log/dCacheDomain.log 
@@ -114,12 +137,10 @@ Starting dCacheDomain done
 paul@celebrimbor:~/git/dCache (master)$ packages/system-test/target/dcache/bin/dcache status
 DOMAIN       STATUS                   PID  USER LOG                                                                               
 dCacheDomain running (for 20 seconds) 6743 paul /home/paul/git/dCache/packages/system-test/target/dcache/var/log/dCacheDomain.log 
-paul@celebrimbor:~/git/dCache (master)$ 
+paul@celebrimbor:~/git/dCache (master)$
 ```
 
-Without going into details, a domain is a Java Virtual Machine \(JVM\) instance.  A node within a dCache cluster can run multiple domains \(i.e., multiple JVM instances\) that are configured in a common configuration system.  The `dcache` script can start and stop the domains independently. Here, in system-test, dCache has been configured to run a single domain, called `dCacheDomain`.
-
-The output from dcache status mentions the location of the log file for this domain.  This file contains the redirected standard out \(stdout\) and standard error \(stderr\) from the java process.
+A couple of final remarks: the `dcache restart` command is a `dcache stop` followed by a `dcache start`.  The `-Pstart` option in maven command for building system-test simply means that maven will issue the `dcache start` command once the build completes.
 
 ## Familiarising yourself with dCache
 
