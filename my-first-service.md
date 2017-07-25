@@ -203,6 +203,126 @@ One last remark: the more observant reader will have noticed that dCache package
 
 So far, we haven't used any Java code.  This changes now, as we start creating some simple code that dCache will run as part of a cell.
 
+Most services have their own maven module and jar file.  We'll follow that convension by first creating a new maven module that will be part of dCache.  The majority of the maven modules are in the `modules` directory, each module with its own subdirectory.  Create the new directory `modules/dcache-simple`, which has a `pom.xml` file with the following content:
+
+```
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.dcache</groupId>
+        <artifactId>dcache-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>dcache-simple</artifactId>
+    <packaging>jar</packaging>
+
+    <name>dCache simple service</name>
+</project>
+```
+
+The pom.xml file controls how maven will build the `dcache-simple.jar` file.
+
+We also need to tell the parent project of this new module, and the packaging modules that there's another jar file to include.
+
+To add our new module in the parent module \(`dcache-parent`\), update the  `pom.xml` file located in the root of the git checkout. You need to add an additional line to the modules block:  `<module>modules/dcache-simple</module>`.  The result should look like:
+
+```
+...
+        <module>modules/dcache-webadmin</module>
+        <module>modules/dcache-restful-api</module>
+        <module>modules/dcache-nfs</module>
+        <module>modules/dcache-simple</module>
+        <module>modules/dcache-srm</module>
+        <module>modules/dcache-info</module>
+...
+```
+
+Finally, we need to include this new jar file in dCache.  To do this, update the `packages/pom.xml` file to include an additional dependency.  This involves adding a new stanza like:
+
+```
+    <dependency>
+        <groupId>org.dcache</groupId>
+        <artifactId>dcache-simple</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+```
+
+With these changes, maven will build the dcache-simple.jar file, as shown in the final output:
+
+```
+[INFO] dCache Info Service ................................ SUCCESS [  0.620 s]
+[INFO] webadmin ........................................... SUCCESS [  1.425 s]
+[INFO] dCache NFSv4.1/pNFS ................................ SUCCESS [  0.318 s]
+[INFO] dCache simple service .............................. SUCCESS [  0.011 s]
+[INFO] missing-files SEMsg plugin ......................... SUCCESS [  0.078 s]
+```
+
+There will also be a jar file in system-test:
+
+```
+paul@celebrimbor:~/git/dCache (master)$ ls packages/system-test/target/dcache/share/classes/dcache-simple-*
+packages/system-test/target/dcache/share/classes/dcache-simple-3.2.0-SNAPSHOT.jar
+paul@celebrimbor:~/git/dCache (master)$ 
+```
+
+We can now create a simple class that logs a message on start-up.  Create the file modules/dcache-simple/src/main/java/org/dcache/simple/Greeter.java with the following content:
+
+```
+// FIXME: add copyright
+package org.dcache.simple;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *  This class greets the world with a customisable message.
+ */
+public class Greeter
+{
+    private static final Logger LOG = LoggerFactory.getLogger(Greeter.class);
+    private String _message;
+    
+    @Required // FIXME need import
+    public void setMessage(String message)
+    {
+        // FIXME need static import
+        _message = requireNonNull(message);
+    }
+    
+    public String getMessage()
+    {
+        return _message;
+    }
+    
+    public void start()
+    {
+        greet();
+    }
+    
+    public void greet();
+    {
+        LOG.warn("{}", _message);
+    }
+}
+```
+
+The `Greeter.java` class creates a new class, but nothing is using it!  We need to have our `simple` service create a `Greeter` class and call the `start` method.
+
+Before that, we need a short diversion on cells in dCache.
+
+Update simple.properties to define a default cell name.
+
+Update simple.batch to create a new cell, rather than creating the output directly.
+
+Add Spring XML file
+
+Run the result.
+
 ## The admin interface: on-line inspection and configuration
 
 The admin interface is a powerful mechanism within dCache for adjusting a live system.
