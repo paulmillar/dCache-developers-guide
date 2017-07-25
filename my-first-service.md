@@ -128,7 +128,7 @@ simple.greeting = Hello World!
 
 During the build process, the `@DEFAULTS_HEADER@` is repaced with a standard set of useful information.
 
-Next, update our service's batch file \(\) to the following content:
+Next, update our service's batch file \(`skel/share/services/simple.batch`\) to the following content:
 
 ```
 #
@@ -144,7 +144,7 @@ say -level=fsay ${simple.greeting}
 
 The `onerror shutdown`mean that dCache will stop during the start-up process if there is an error.  The `check` command returns with an error if the argument \(`simple.greeting`\) has not been defined; the `-strong` option means the command also fails if the value is empty.
 
-Rebuilding system test \(`mvn -am -pl packages/system-test clean package -DskipTests -Pstart`\) yields the expected greeting:
+Rebuilding system test \(`mvn -am -pl packages/system-test clean package -DskipTests -Pstart`\) yields the expected greeting in `packages/system-test/target/dcache/var/log/dCacheDomain.log`:
 
 ```
 2017-07-24 14:08:31 Launching /usr/lib/jvm/java-8-openjdk-[...]
@@ -157,7 +157,7 @@ INFO  - system-test.conf:160: Property frontend.net.internal is not a standard p
 
 The difference is that we can now change this greeting without changing the batch file.
 
-Edit the layout file in system-test \(packages/system-test/target/dcache/etc/layouts/system-test.conf\) and add the extra line immediately after the `[dCacheDomain/simple]` line:
+Edit the layout file in system-test \(`packages/system-test/target/dcache/etc/layouts/system-test.conf`\) and add the extra line immediately after the `[dCacheDomain/simple]` line:
 
 ```
 ...
@@ -173,7 +173,7 @@ simple.greeting = Aloha Honua!
 ...
 ```
 
-Take care **NOT** to rebuild system-test after adding the `simple.greeting = Aloha Honua!` line to system-test.conf as you will loose that line.  If you want your changes to survive system-test being rebuild, modify `packages/system-test/src/main/skel/etc/layouts/system-test.conf`; however, then the changes only take affect after system test is rebuilt.
+Take care **NOT** to rebuild system-test after adding the `simple.greeting = Aloha Honua!` line to system-test.conf as you will loose that edit when dCache rebuilds system-test.  If you want your changes to survive system-test being rebuild, modify `packages/system-test/src/main/skel/etc/layouts/system-test.conf`; however, then the changes only take affect after system test is rebuilt.
 
 To see the effect of our new configuration, we simply restart dCache  with the `dcache restart` command:
 
@@ -267,7 +267,7 @@ There will also be a jar file in system-test:
 ```
 paul@celebrimbor:~/git/dCache (master)$ ls packages/system-test/target/dcache/share/classes/dcache-simple-*
 packages/system-test/target/dcache/share/classes/dcache-simple-3.2.0-SNAPSHOT.jar
-paul@celebrimbor:~/git/dCache (master)$ 
+paul@celebrimbor:~/git/dCache (master)$
 ```
 
 We can now create a simple class that logs a message on start-up.  Create the file modules/dcache-simple/src/main/java/org/dcache/simple/Greeter.java with the following content:
@@ -286,24 +286,24 @@ public class Greeter
 {
     private static final Logger LOG = LoggerFactory.getLogger(Greeter.class);
     private String _message;
-    
+
     @Required // FIXME need import
     public void setMessage(String message)
     {
         // FIXME need static import
         _message = requireNonNull(message);
     }
-    
+
     public String getMessage()
     {
         return _message;
     }
-    
+
     public void start()
     {
         greet();
     }
-    
+
     public void greet();
     {
         LOG.warn("{}", _message);
