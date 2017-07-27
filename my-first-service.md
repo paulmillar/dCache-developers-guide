@@ -201,9 +201,17 @@ One last remark: the more observant reader will have noticed that dCache package
 
 ## Introducing spring: bringing Java into the game
 
-So far, we haven't used any Java code.  This changes now, as we start creating some simple code that dCache will run as part of a cell.
+So far, we haven't used any Java code.  We'll change this now by replacing the `say` batch command with some simple Java code that does the same thing.
 
-Most services have their own maven module and jar file.  We'll follow that convension by first creating a new maven module that will be part of dCache.  The majority of the maven modules are in the `modules` directory, each module with its own subdirectory.  Create the new directory `modules/dcache-simple`, which has a `pom.xml` file with the following content:
+Before that, we need a short introduction to cells in dCache.  Cells are dCache components that have a specific task and achieve this by communicating with other cells using messages.  A domain typically hosts several cells, with most services creating a single cell.  A cell has a domain-unique identity, can send and receive messages from other cells, uses a separate ThreadPool from other cells, and can have different logging configuration.
+
+Most services in dCache have their own maven module, which produces a jar file.  We'll follow that convension here.
+
+### Creating a new module
+
+In git, the majority of the maven modules are in the `modules` directory, each module with its own subdirectory.
+
+Create the a directory `modules/dcache-simple`, and create a new `pom.xml` file with the following content:
 
 ```
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -227,9 +235,11 @@ Most services have their own maven module and jar file.  We'll follow that conve
 
 The pom.xml file controls how maven will build the `dcache-simple.jar` file.
 
-We also need to tell the parent project of this new module, and the packaging modules that there's another jar file to include.
+The first five lines are basically boiler-plate for a maven `pom.xml` file.  The details within the `parent` element indicates from which maven module certain values are derived.  The `packaging` element describes what this module produces; in this case, a jar file.  The `artifactId` identifies this module within maven; it is also used to generate the jar filename.  Finally, the `name` element is used when generating human-consumable output.
 
-To add our new module in the parent module \(`dcache-parent`\), update the  `pom.xml` file located in the root of the git checkout. You need to add an additional line to the modules block:  `<module>modules/dcache-simple</module>`.  The result should look like:
+We also need two more changes: to tell our parent project of this new module and the packaging modules that there's another jar file to include.
+
+To add our new module in the parent module \(which has an artifactId of `dcache-parent`\), update the  `pom.xml` file located in the root of the git checkout. The `modules` element lists all modules. You need to add an additional line to it:  `<module>modules/dcache-simple</module>`.  Focusing on only that part of the file, the result should look like:
 
 ```
 ...
@@ -242,7 +252,7 @@ To add our new module in the parent module \(`dcache-parent`\), update the  `pom
 ...
 ```
 
-Finally, we need to include this new jar file in dCache.  To do this, update the `packages/pom.xml` file to include an additional dependency.  This involves adding a new stanza like:
+Finally, we need to include this new jar file in the different dCache packaging.  To do this, update the `packages/pom.xml` file to include an additional dependency.  This involves adding a new stanza to the `dependencies` element, like:
 
 ```
     <dependency>
@@ -252,7 +262,7 @@ Finally, we need to include this new jar file in dCache.  To do this, update the
     </dependency>
 ```
 
-With these changes, maven will build the dcache-simple.jar file, as shown in the final output:
+With these changes, maven will build the dcache-simple.jar file.  Maven shows a summary of the modules it built after it completes; this will now be a `dCache simple service` line in that output:
 
 ```
 [INFO] dCache Info Service ................................ SUCCESS [  0.620 s]
@@ -270,27 +280,84 @@ packages/system-test/target/dcache/share/classes/dcache-simple-3.2.0-SNAPSHOT.ja
 paul@celebrimbor:~/git/dCache (master)$
 ```
 
-We can now create a simple class that logs a message on start-up.  Create the file modules/dcache-simple/src/main/java/org/dcache/simple/Greeter.java with the following content:
+### Creating the cell
+
+Now that we have the new dcache-simple module, which generates the `dcache-simple-*.jar `file, we can now create our simple cell.
+
+We need to define the default name for our cell.  Following the convention from other cells, this configuration property is called `simple.cell.name` and should be found in the `skel/share/defaults/simple.properties` file.  Let's update this file now by adding the definition of the `simple.cell.name` property:
 
 ```
-// FIXME: add copyright
+# -----------------------------------------------------------------------
+# Default values for the simple service
+# -----------------------------------------------------------------------
+@DEFAULTS_HEADER@
+
+# The greeting text to use
+#
+simple.greeting = Hello, world!
+
+# ---- Cell names
+#
+simple.cell.name = simple
+```
+
+Now, we can update `skel/share/services/simple.batch` by replacing the `say` command with a `create` command.  The batch file should look like:
+
+```
+#
+#      Simple service
+#
+
+onerror shutdown
+
+check -strong simple.greeting
+
+create org.dcache.cells.UniversalSpringCell ${simple.cell.name} \
+        "classpath:org/dcache/simple/simple.xml"
+```
+
+This `create` command is resposible for starting a new cell using the named class \(first argument\) and giving it the name from the second argument.  The meaning of the third argument is specific to the cell: for UniversalSpringCell, for now we only need one argument: the location of the Spring XML file it will use to build the cell.
+
+Let's now create the Java class that will generate the log message.  Create the file `modules/dcache-simple/src/main/java/org/dcache/simple/Greeter.java` with the following content:
+
+```java
+/*
+ * dCache - http://www.dcache.org/
+ *
+ * Copyright (C) 2017 Deutsches Elektronen-Synchrotron
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.dcache.simple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Required;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- *  This class greets the world with a customisable message.
+ * This class emits a customisable message.
  */
 public class Greeter
 {
     private static final Logger LOG = LoggerFactory.getLogger(Greeter.class);
     private String _message;
 
-    @Required // FIXME need import
+    @Required
     public void setMessage(String message)
     {
-        // FIXME need static import
         _message = requireNonNull(message);
     }
 
@@ -299,29 +366,76 @@ public class Greeter
         return _message;
     }
 
-    public void start()
-    {
-        greet();
-    }
-
-    public void greet();
+    public void greet()
     {
         LOG.warn("{}", _message);
     }
 }
 ```
 
-The `Greeter.java` class creates a new class, but nothing is using it!  We need to have our `simple` service create a `Greeter` class and call the `start` method.
+A few points to note with this code:
 
-Before that, we need a short diversion on cells in dCache.
+* It has a copyright notice at the top: all new code should include such a notice.
+* The code is using Simple Logging Facade for Java \(slf4j\).  This is the standard logging framework in dCache.
+* The `@Required` annotation comes from Spring.  It means that, if this value is not set, Spring will fail when creating the object, which will ultimately cause dCache to shutdown during the startup procedule.  This follows the fail-fast principle.
 
-Update simple.properties to define a default cell name.
+Adding this Java code breaks compilation of the `dcache-simple` module because it uses the slf4j and Spring beans libraries, but maven does not know about these dependencies.  To fix this, update `modules/dcache-simple/pom.xml` and add the `dependencies` element underneath the `name` element.  The last lines of the file should now look like:
 
-Update simple.batch to create a new cell, rather than creating the output directly.
+```
+...
+    <name>dCache simple service</name>
 
-Add Spring XML file
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+	</dependency>
+    </dependencies>
+</project>
+```
 
-Run the result.
+We're nearly there.  The last part is the Spring configuration that will describe how UniveralSpringCell can create the new cell.
+
+Create the file `modules/dcache-simple/src/main/resources/org/dcache/simple/simple.xml` with the following content:
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+              http://www.springframework.org/schema/beans/spring-beans.xsd
+              http://www.springframework.org/schema/context
+              http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder/>
+
+    <bean class="org.dcache.simple.Greeter" init-method="greet">
+        <description>Greet the new world</description>
+        <property name="message" value="${simple.greeting}"/>
+    </bean>
+</beans>
+```
+
+The first eight lines are boiler-plate.  The `<context:property-placeholder/>` line allows access to dCache configuration properties; for example, by writing `${<property-name>}`to access the property `<property-name>`.  The `bean` element describes a Java object to create: `class` says which Java class to construct, `description` is used by Spring internally when generating human-readable output, `property` describes which setter methods to call, and `init-method` describes a method to call after the object has been properly configured.
+
+With all these changes, we can now rebuild dCache \(`mvn -am -pl  packages/system-test clean package -DskipTests -Pstart`\) and see our familiar greeting in the `packages/system-test/target/dcache/var/log/dCacheDomain.log` file:
+
+```
+2017-07-27 12:49:50 Launching /usr/lib/jvm/java-8-openjdk-[...]
+Listening for transport dt_socket at address: 2299
+INFO  - system-test.conf:1: Property system-test.home is not a standard property
+INFO  - system-test.conf:160: Property frontend.net.internal is not a standard property
+27 Jul 2017 12:49:53 (System) [] ZooKeeper connection to localhost/127.0.0.1:2181 failed (Connection refused), attempting reconnect.
+27 Jul 2017 12:49:53 (System) [] ZooKeeper connection to localhost/0:0:0:0:0:0:0:1:2181 failed (Connection refused), attempting reconnect.
+27 Jul 2017 12:49:53 (simple) [] Hello, world!
+```
+
+There is a difference, though!  The output now has `simple` in parentheses, rather than System.  This is because the log entry is generated by our cell, which is called `simple` by default.
 
 ## The admin interface: on-line inspection and configuration
 
