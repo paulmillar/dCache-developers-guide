@@ -10,7 +10,7 @@ origin  git@github.com:paulmillar/dcache.git (fetch)
 origin  git@github.com:paulmillar/dcache.git (push)
 upstream        git@github.com:dCache/dcache.git (fetch)
 upstream        git@github.com:dCache/dcache.git (push)
-paul@celebrimbor:~/git/dCache (master)$ 
+paul@celebrimbor:~/git/dCache (master)$
 ```
 
 If you are not a member of the dCache core team then you will not have commit access to the official dCache repo.  In this case, you can use the anonymous HTTP-based access:
@@ -21,7 +21,7 @@ origin  git@github.com:paulmillar/dcache.git (fetch)
 origin  git@github.com:paulmillar/dcache.git (push)
 upstream        https://github.com/dCache/dcache.git (fetch)
 upstream        https://github.com/dCache/dcache.git (push)
-paul@celebrimbor:~/git/dCache (master)$ 
+paul@celebrimbor:~/git/dCache (master)$
 ```
 
 The output from `git help remote` will hopefully let you modify your local dCache code-base to match one of these expectations.
@@ -29,6 +29,8 @@ The output from `git help remote` will hopefully let you modify your local dCach
 ## Some general comments
 
 In general, developers only commit to `master` branch and only once the code as passed the code-review process.  Never push commits into any other branch in `upstream`.
+
+**Never** do a forced push to `upstream` \(a push with a + in the name\).
 
 Patches should be as small as possible, while achieving some admin- or user-noticable result.  Often, very large patches can be broken down into smaller patches, each of which builds on the previous patches and adds some meaningful functionality.  Large patches are harder to code-review and provide a hiding place for bugs.
 
@@ -47,7 +49,7 @@ paul@celebrimbor:~/git/dCache (master)$ git fetch upstream
 paul@celebrimbor:~/git/dCache (master)$ git checkout -b development/webdav-add-mirror-option upstream/master
 Branch development/webdav-add-mirror-option set up to track remote branch master from upstream.
 Switched to a new branch 'development/webdav-add-mirror-option'
-paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$ 
+paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$
 ```
 
 In this case, nothing has changed in the `upstream` remote, so the fetch command had no output.  The command will give some output if there has been activity from other developers committing patches, or the release-team have been busy.
@@ -113,7 +115,7 @@ Review request #10375 posted.
 
 https://rb.dcache.org/r/10375/
 https://rb.dcache.org/r/10375/diff/
-paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$ 
+paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$
 ```
 
 The link is also opened in your web browser.  You should see your git commit message as the ReviewBoard title and description.  The Diff tab allows you to review the patch.  One you are happy with both, Submit the patch for code review.
@@ -128,7 +130,7 @@ Review request #10375 posted.
 
 https://rb.dcache.org/r/10375/
 https://rb.dcache.org/r/10375/diff/
-paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$ 
+paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$
 ```
 
 Once the code-review phase is complete you can commit the patch into dCache.  To do this, you need to update the patch to include a reference to patch location and described which developers said "Ship It!" for the patch:
@@ -188,7 +190,7 @@ Total 575 (delta 316), reused 79 (delta 20)
 remote: Resolving deltas: 100% (316/316), completed with 91 local objects.
 To git@github.com:paulmillar/dcache.git
  * [new branch]      HEAD -> development/webdav-add-mirror-option
-paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$ 
+paul@celebrimbor:~/git/dCache (development/webdav-add-mirror-option)$
 ```
 
 Once the branch exists in your fork, you can create a pull-request into the `master` branch on dCache.
@@ -240,7 +242,7 @@ Create a branch from the current version of the branch you wish to fix, 3.1 in t
 paul@celebrimbor:~/git/dCache (fix/srm-fix-tls-handshake)$ git checkout -b fix/3.1/rb10376 upstream/3.1
 Branch fix/3.1/rb10376 set up to track remote branch 3.1 from upstream.
 Switched to a new branch 'fix/3.1/rb10376'
-paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$ 
+paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$
 ```
 
 Cherry-pick the patch, in this case from master:
@@ -250,8 +252,7 @@ paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$ git cherry-pick master
 [fix/3.1/rb10376 9107534] srm: fix problem with plain TLS connections
  Date: Tue Jul 18 15:32:45 2017 +0200
  2 files changed, 45 insertions(+), 4 deletions(-)
-paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$ 
-
+paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$
 ```
 
 and push this to your fork of dCache:
@@ -263,7 +264,7 @@ Writing objects: 100% (1/1), 496 bytes | 0 bytes/s, done.
 Total 1 (delta 0), reused 0 (delta 0)
 To git@github.com:paulmillar/dcache.git
  * [new branch]      HEAD -> fix/3.1/rb10376
-paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$ 
+paul@celebrimbor:~/git/dCache (fix/3.1/rb10376)$
 ```
 
 You can use the github web interface to create the pull request.  Note that the target branch \(`3.1` in this example\), is in the origin branch's name \(`fix/3.1/rb10376`\).  This makes creating the pull-request easier.
@@ -288,8 +289,4 @@ Once all the pull-requests are sent, you can close the ReviewBoard request.
 ## Fixing a bug that is not present in master
 
 Fixing a bug that is present in a supported dCache version, but not present in the `master` branch is similar to when the bug is in master, except you do not commit the patch to master.  As a consequence, the commit message has no `Target` metadata and the ReviewBoard entry has no `Committed` metadata. Once the patch passes code-review, pull requests are created using the currently uncommitted patch.
-
-
-
-
 
