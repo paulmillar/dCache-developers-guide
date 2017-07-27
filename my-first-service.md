@@ -209,7 +209,7 @@ So, in this section we are going to create a very simple new cell that simply gr
 
 Most services in dCache have their own maven module, which produces a jar file.  We'll follow that convension here.
 
-### Creating a new module
+#### Creating a new module
 
 In git, the majority of the maven modules are in the `modules` directory, each module with its own subdirectory.
 
@@ -282,7 +282,7 @@ packages/system-test/target/dcache/share/classes/dcache-simple-3.2.0-SNAPSHOT.ja
 paul@celebrimbor:~/git/dCache (master)$
 ```
 
-### Creating the cell
+#### Creating the cell
 
 Now that we have the new dcache-simple module, which generates the `dcache-simple-*.jar`file, we can now create our simple cell.
 
