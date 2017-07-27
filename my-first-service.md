@@ -203,7 +203,9 @@ One last remark: the more observant reader will have noticed that dCache package
 
 So far, we haven't used any Java code.  We'll change this now by replacing the `say` batch command with some simple Java code that does the same thing.
 
-Before that, we need a short introduction to cells in dCache.  Cells are dCache components that have a specific task and achieve this by communicating with other cells using messages.  A domain typically hosts several cells, with most services creating a single cell.  A cell has a domain-unique identity, can send and receive messages from other cells, uses a separate ThreadPool from other cells, and can have different logging configuration.
+Before that, we need a short introduction to cells in dCache.  Cells are dCache components that have a specific task and achieve this by communicating with other cells using messages.  A domain typically hosts several cells, with most services creating a single cell.  A cell has a domain-unique identity, can send and receive messages from other cells, uses a separate threads from other cells, and can have different logging configuration.
+
+So, in this section we are going to create a very simple new cell that simply greets the new world.
 
 Most services in dCache have their own maven module, which produces a jar file.  We'll follow that convension here.
 
@@ -282,7 +284,7 @@ paul@celebrimbor:~/git/dCache (master)$
 
 ### Creating the cell
 
-Now that we have the new dcache-simple module, which generates the `dcache-simple-*.jar `file, we can now create our simple cell.
+Now that we have the new dcache-simple module, which generates the `dcache-simple-*.jar`file, we can now create our simple cell.
 
 We need to define the default name for our cell.  Following the convention from other cells, this configuration property is called `simple.cell.name` and should be found in the `skel/share/defaults/simple.properties` file.  Let's update this file now by adding the definition of the `simple.cell.name` property:
 
@@ -393,7 +395,7 @@ Adding this Java code breaks compilation of the `dcache-simple` module because i
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
-	</dependency>
+    </dependency>
     </dependencies>
 </project>
 ```
@@ -402,7 +404,7 @@ We're nearly there.  The last part is the Spring configuration that will describ
 
 Create the file `modules/dcache-simple/src/main/resources/org/dcache/simple/simple.xml` with the following content:
 
-```
+```XML
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
