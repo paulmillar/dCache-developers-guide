@@ -199,7 +199,7 @@ The new greeting won't be at the top of the file because \(by default\) dCache d
 
 One last remark: the more observant reader will have noticed that dCache packages the batch scripts.  Therefore, to change the greeting we could have edited the batch file for the `simple` service \(`packages/system-test/target/dcache/share/services/simple.batch`\).  While this will work, we don't intend admins to modify batch scripts and upgrading dCache will overwrite any changes.
 
-## Introducing spring: bringing Java into the game
+## Introducing spring: bringing Java into the game {#addjava}
 
 So far, we haven't used any Java code.  We'll change this now by replacing the `say` batch command with some simple Java code that does the same thing.
 
@@ -209,7 +209,7 @@ So, in this section we are going to create a very simple new cell that simply gr
 
 Most services in dCache have their own maven module, which produces a jar file.  We'll follow that convension here.
 
-#### Creating a new module
+#### Creating a new module {#newmodule}
 
 In git, the majority of the maven modules are in the `modules` directory, each module with its own subdirectory.
 
