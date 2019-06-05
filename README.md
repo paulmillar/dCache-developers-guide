@@ -8,6 +8,8 @@ The dCache software is freely available and open-source.
 
 This document is meant for people who want to modify how dCache behaves: either fixing a bug or adding some exciting new feature.  We hope that you will contribute your changes so others can benefit from them, so a large fraction of this document describes how to interact with the rest of the dCache team to facilitate this.  The underlying idea is that this document helps new contributors become productive quickly.
 
+Additionally, documentation on dCache's release process is included which is aimed at members of DESY's development team.
+
 ## What this document isn't
 
 This document is not a manual on how to use dCache software.  That topic is covered by "The dCache Book".  It is also not a design document that describes how dCache works.  That document, as a single document, is currently missing; however, important aspects of dCache design are describe in seperate documents.
